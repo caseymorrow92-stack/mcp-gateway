@@ -170,14 +170,3 @@ This is the best reference for valid clean/warning/error/multi-category inputs.
 ## Build Script
 
 Run `npm run build` to build.
-
-## Deployment Reference
-
-- `docs/mcp-middleware-platform-reference-architecture.md`
-
-## Local Demo
-
-- `demo/mcp-middleware-platform/README.md`
-- Quick run: `node demo/mcp-middleware-platform/demo-client.js`
-- Run one scenario: `node demo/mcp-middleware-platform/runners/run-scenario.js clean.json`
-- Run all scenarios: `node demo/mcp-middleware-platform/runners/run-all-scenarios.js`
