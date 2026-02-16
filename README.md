@@ -1,183 +1,153 @@
-# mcp-middleware-platform
+# MCP Gateway
 
-Deterministic contract scaffold for a pluggable MCP governance middleware pipeline.
+<p>
+<a href="https://github.com/caseymorrow92-stack/mcp-gateway/actions"><img src="https://img.shields.io/github/actions/workflow/status/caseymorrow92-stack/mcp-gateway?label=build" alt="Build"></a>
+<a href="https://www.npmjs.com/package/mcp-gateway"><img src="https://img.shields.io/npm/v/mcp-gateway" alt="npm"></a>
+<a href="https://github.com/caseymorrow92-stack/mcp-gateway/blob/main/LICENSE"><img src="https://img.shields.io/github/license/caseymorrow92-stack/mcp-gateway" alt="License"></a>
+</p>
 
-## Pipeline
+Pluggable governance layer for MCP-powered AI agents. Add security, observability, and control to your AI agents without changing a single line of code.
 
-```text
-ProxyProcessSpawnRequestV1
-  -> proxy-process-governor
-  -> ProxyProcessSpawnDecisionV1
+## Why MCP Gateway?
 
-RawProxyInvocationV1
-  -> request-normalizer
-  -> auth-evaluator
-  -> policy-evaluator
-  -> tool-visibility-filter
-  -> rate-limit-enforcer
-  -> request-redactor
-  -> upstream-dispatcher
-  -> response-redactor
-  -> trace-recorder
-  -> cost-meter
-  -> exchange-assembler
-  -> MiddlewareExecutionReportV1
-```
+AI agents powered by MCP (Model Context Protocol) are transforming how we build software. But there's a problem: **you can't deploy AI agents to production without governance.**
 
-## Components
+- No audit trail for tool calls
+- No way to enforce access policies
+- No rate limiting or cost controls
+- No PII redaction on sensitive data
 
-| Component | Primary responsibility | Output artifact |
-|---|---|---|
-| `request-normalizer` | Canonicalize inbound MCP invocation context | `NormalizedProxyContextV1` |
-| `auth-evaluator` | Identity/scope gating | `AuthEvaluationV1` |
-| `policy-evaluator` | Policy allow/deny/transform evaluation | `PolicyEvaluationV1` |
-| `tool-visibility-filter` | Tool visibility and selection eligibility | `ToolFilterDecisionV1` |
-| `rate-limit-enforcer` | Fixed-window quota enforcement | `RateLimitDecisionV1` |
-| `request-redactor` | Request payload redaction | `RedactedRequestV1` |
-| `upstream-dispatcher` | Dispatch decision and upstream result synthesis | `UpstreamExecutionResultV1` |
-| `response-redactor` | Response payload redaction | `RedactedResponseV1` |
-| `trace-recorder` | OTel-style spans/metrics generation | `TraceRecordSetV1` |
-| `cost-meter` | Token and request cost computation | `CostMeteringRecordV1` |
-| `exchange-assembler` | Final report assembly | `MiddlewareExecutionReportV1` |
-| `proxy-process-governor` | Child process spawn governance for stdio proxy mode | `ProxyProcessSpawnDecisionV1` |
+MCP Gateway sits between your AI agent and MCP servers, adding a pluggable middleware layer for security, observability, and control.
 
-## Output
+## Key Features
 
-`MiddlewareExecutionReportV1` contains final status, middleware decisions, enforcement outcomes, observability summary, cost totals, and response metadata for each invocation.
+- **Policy Enforcement** — Allow/deny/transform tool calls based on declarative policies
+- **Rate Limiting** — Throttle requests per user, agent, or tool
+- **PII Redaction** — Automatically mask sensitive data in requests and responses  
+- **Tool Filtering** — Control which tools are visible to which users
+- **Observability** — Built-in OTel-compatible tracing and cost metering
+- **Process Governance** — Secure child process spawning for stdio proxy mode
 
-## Quickstart
+## Quick Start
 
-1. Ensure TypeScript runtime tooling is available (`tsx` is required for the CLI examples).
-2. Build the project:
+### Installation
 
 ```bash
-npm run build
+npm install -g mcp-gateway
 ```
 
-3. Run the test vectors and contract suite:
+Or use directly with npx:
 
 ```bash
-npm test
+npx mcp-gateway --help
 ```
 
-## Use It
-
-### CLI
-
-The CLI accepts a single `RawProxyInvocationV1` JSON file path:
+### Run with an MCP Server
 
 ```bash
-npx tsx ./cli.ts ./input.json
+npx mcp-gateway --stdio -- "npx @modelcontextprotocol/server-filesystem /data"
 ```
 
-Stdio proxy mode (runs MCP server as child process):
+Your MCP client connects to the gateway instead of the server directly.
+
+### With Policy Configuration
 
 ```bash
-npx tsx ./cli.ts --proxy "node path/to/mcp-server.js" --stdio
+npx mcp-gateway --policy-file ./my-policy.json --stdio -- "node my-mcp-server.js"
 ```
 
-Proxy spawn governance env vars:
+## Policy Configuration
 
-- `MCP_PROXY_ALLOWED_PREFIXES` (comma-separated command prefixes, default `node,npx,uvx,python,python3,bun,deno`)
-- `MCP_PROXY_MAX_RESTARTS` (default `3`)
-- `MCP_PROXY_RESTART_BACKOFF_MS` (default `1000`)
-- `MCP_PROXY_KILL_TIMEOUT_MS` (default `3000`)
-- `MCP_PROXY_SERVER_PROFILE_ID` (default `default-stdio-profile`)
-- `MCP_PROXY_TENANT_ID` (default `proxy-tenant`)
-
-Example `input.json`:
+Create a `policy.json` file:
 
 ```json
 {
-  "invocationIdHint": "inv-clean",
-  "envelope": {
-    "protocolVersion": "2025-01-01",
-    "requestId": "req-clean",
-    "method": "tools/call",
-    "transport": "http",
-    "receivedAtEpochMs": 1730000000123,
-    "toolCall": {
-      "serverId": "crm-server",
-      "toolName": "customer.lookup",
-      "arguments": {
-        "serverId": "crm-server",
-        "customerId": "cust-1"
-      }
-    }
-  },
-  "context": {
-    "tenantId": "tenant-acme",
-    "environment": "prod",
-    "sessionId": "session-1",
-    "userId": "user-1",
-    "agentId": "agent-1",
-    "orgRoles": ["platform"],
-    "scopes": ["tools:read"],
-    "sourceIp": "203.0.113.10"
-  },
-  "policyRules": [],
-  "rateLimitRules": [],
-  "toolCatalog": [
+  "policyRules": [
     {
-      "serverId": "crm-server",
-      "toolName": "customer.lookup",
-      "description": "Look up a customer profile by id",
-      "visibility": "public",
-      "scopeRequirements": ["tools:read"]
+      "policyId": "deny-sensitive",
+      "effect": "deny",
+      "target": {
+        "toolNames": ["file.delete", "db.drop"]
+      }
+    },
+    {
+      "policyId": "allow-other",
+      "effect": "allow"
     }
   ],
-  "redactionRules": [],
-  "pricing": {
-    "inputTokenPriceUsd": 0.0001,
-    "outputTokenPriceUsd": 0.0002,
-    "requestBaseFeeUsd": 0.01
-  },
-  "usageSnapshot": {
-    "tokenEstimateInput": 120,
-    "tokenEstimateOutput": 80,
-    "historicalCallsInWindow": {},
-    "windowStartEpochMs": 1730000000000
-  }
+  "rateLimitRules": [
+    {
+      "ruleId": "user-limit",
+      "scope": "userId",
+      "maxRequests": 100,
+      "windowMs": 60000
+    }
+  ],
+  "redactionRules": [
+    {
+      "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+      "replacement": "[EMAIL]"
+    }
+  ]
 }
 ```
 
-The CLI prints a summary including final status, decision counts, HTTP status, dispatch outcome, and total cost.
+## Demo
 
-Important: include `envelope.toolCall.arguments.serverId`. The current tool filter checks selected tool eligibility using `requestPayload.serverId`.
+Run the built-in demo:
 
-### Programmatic API
-
-Use `runMcpMiddlewarePlatform` directly:
-
-```ts
-import { runMcpMiddlewarePlatform } from "./index";
-import type { RawProxyInvocationV1 } from "./components/artifacts";
-
-const input: RawProxyInvocationV1 = /* build invocation */;
-const report = runMcpMiddlewarePlatform(input);
-
-console.log(report.finalStatus, report.cost.totalUsd, report.response.httpStatusCode);
+```bash
+node demo/mcp-middleware-platform/demo-client.js
 ```
 
-## Reference Inputs
+Try different policy scenarios:
 
-Reusable scenario vectors live in:
+```bash
+./demo/mcp-middleware-platform/run-scenario.sh allow-all
+./demo/mcp-middleware-platform/run-scenario.sh deny-specific-tools
+./demo/mcp-middleware-platform/run-scenario.sh redact-pii
+```
 
-- `tests/e2e.v1.test-vectors.ts`
+## Architecture
 
-This is the best reference for valid clean/warning/error/multi-category inputs.
+```
+┌──────────────┐     ┌─────────────────┐     ┌──────────────┐
+│ MCP Client   │ ──> │ mcp-gateway    │ ──> │ MCP Server   │
+│ (Claude,     │     │                 │     │              │
+│  OpenAI,      │     │ auth            │     │ - fileserver │
+│  LangChain)   │     │ policy          │     │ - database   │
+│              │     │ rate-limit      │     │ - search     │
+│              │     │ redact         │     │              │
+│              │     │ trace          │     │              │
+└──────────────┘     └─────────────────┘     └──────────────┘
+```
 
-## Build Script
+## Use Cases
 
-Run `npm run build` to build.
+- **Enterprise Security** — SOC2 compliance, audit trails, data loss prevention
+- **Rate Limiting** — Prevent runaway agents from hitting API limits
+- **Cost Control** — Track and limit token usage per user/team
+- **Data Privacy** — Redact PII before it reaches AI agents
+- **Access Control** — Different tools for different user roles
 
-## Deployment Reference
+## Pricing
 
-- `docs/mcp-middleware-platform-reference-architecture.md`
+| Tier | Price | Features |
+|------|-------|----------|
+| Open Source | Free | Core middleware, CLI |
+| Pro | $49/mo | OTel export, Langfuse, dashboard |
+| Enterprise | Custom | SSO, SLA, on-prem support |
 
-## Local Demo
+## Contributing
 
-- `demo/mcp-middleware-platform/README.md`
-- Quick run: `node demo/mcp-middleware-platform/demo-client.js`
-- Run one scenario: `./demo/mcp-middleware-platform/run-scenario.sh allow-all`
-- Run all scenarios: `./demo/mcp-middleware-platform/run-scenarios.sh`
+Contributions welcome! Check our [Contributing Guide](CONTRIBUTING.md) for setup instructions.
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+## Links
+
+- [Documentation](docs/)
+- [GitHub](https://github.com/caseymorrow92-stack/mcp-gateway)
+- [npm](https://www.npmjs.com/package/mcp-gateway)
