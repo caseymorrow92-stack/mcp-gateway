@@ -1,13 +1,9 @@
 # MCP Gateway
 
-<p>
-<a href="https://github.com/caseymorrow92-stack/mcp-gateway/actions"><img src="https://img.shields.io/github/actions/workflow/status/caseymorrow92-stack/mcp-gateway?label=build" alt="Build"></a>
-<a href="https://www.npmjs.com/package/mcp-gateway"><img src="https://img.shields.io/npm/v/mcp-gateway" alt="npm"></a>
-<a href="https://github.com/caseymorrow92-stack/mcp-gateway/blob/main/LICENSE"><img src="https://img.shields.io/github/license/caseymorrow92-stack/mcp-gateway" alt="License"></a>
-<a href="https://discord.gg"><img src="https://img.shields.io/discord/123456789?label=Discord" alt="Discord"></a>
-</p>
-
 Pluggable governance layer for MCP-powered AI agents. Add security, observability, and control to your AI agents without changing a single line of code.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node.js Version](https://img.shields.io/node/v/mcp-gateway)](package.json)
 
 ## Why MCP Gateway?
 
