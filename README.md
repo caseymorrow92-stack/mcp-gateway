@@ -108,15 +108,15 @@ Try different policy scenarios:
 ## Architecture
 
 ```
-┌──────────────┐     ┌─────────────────┐     ┌──────────────┐
-│ MCP Client   │ ──> │ mcp-gateway    │ ──> │ MCP Server   │
-│ (Claude,     │     │                 │     │              │
-│  OpenAI,      │     │ auth            │     │ - fileserver │
-│  LangChain)   │     │ policy          │     │ - database   │
-│              │     │ rate-limit      │     │ - search     │
-│              │     │ redact         │     │              │
-│              │     │ trace          │     │              │
-└──────────────┘     └─────────────────┘     └──────────────┘
+┌──────────────┐     ┌──────────────────┐     ┌──────────────┐
+│ MCP Client   │ ──> │ mcp-gateway     │ ──> │ MCP Server   │
+│              │     │                  │     │              │
+│ - Claude     │     │ auth            │     │ - fileserver │
+│ - OpenAI     │     │ policy          │     │ - database   │
+│ - LangChain  │     │ rate-limit     │     │ - search     │
+│              │     │ redact          │     │              │
+│              │     │ trace           │     │              │
+└──────────────┘     └──────────────────┘     └──────────────┘
 ```
 
 ## Use Cases
