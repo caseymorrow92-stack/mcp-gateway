@@ -48,16 +48,16 @@ RawProxyInvocationV1
 ## Quickstart
 
 1. Ensure TypeScript runtime tooling is available (`tsx` is required for the CLI examples).
-2. Run the project build flow:
+2. Build the project:
 
 ```bash
-./agent_instructions/run.sh mcp-middleware-platform
+npm run build
 ```
 
-3. Run vector checks for this project:
+3. Run the test vectors and contract suite:
 
 ```bash
-npx tsx projects/test-vector-runner/cli.ts projects/mcp-middleware-platform
+npm test
 ```
 
 ## Use It
@@ -67,13 +67,13 @@ npx tsx projects/test-vector-runner/cli.ts projects/mcp-middleware-platform
 The CLI accepts a single `RawProxyInvocationV1` JSON file path:
 
 ```bash
-npx tsx projects/mcp-middleware-platform/cli.ts ./input.json
+npx tsx ./cli.ts ./input.json
 ```
 
 Stdio proxy mode (runs MCP server as child process):
 
 ```bash
-npx tsx projects/mcp-middleware-platform/cli.ts --proxy "node path/to/mcp-server.js" --stdio
+npx tsx ./cli.ts --proxy "node path/to/mcp-server.js" --stdio
 ```
 
 Proxy spawn governance env vars:
@@ -150,8 +150,8 @@ Important: include `envelope.toolCall.arguments.serverId`. The current tool filt
 Use `runMcpMiddlewarePlatform` directly:
 
 ```ts
-import { runMcpMiddlewarePlatform } from "./projects/mcp-middleware-platform";
-import type { RawProxyInvocationV1 } from "./projects/mcp-middleware-platform/components/artifacts";
+import { runMcpMiddlewarePlatform } from "./index";
+import type { RawProxyInvocationV1 } from "./components/artifacts";
 
 const input: RawProxyInvocationV1 = /* build invocation */;
 const report = runMcpMiddlewarePlatform(input);
@@ -163,19 +163,10 @@ console.log(report.finalStatus, report.cost.totalUsd, report.response.httpStatus
 
 Reusable scenario vectors live in:
 
-- `projects/mcp-middleware-platform/tests/e2e.v1.test-vectors.ts`
+- `tests/e2e.v1.test-vectors.ts`
 
 This is the best reference for valid clean/warning/error/multi-category inputs.
 
 ## Build Script
 
-Run `./agent_instructions/run.sh mcp-middleware-platform` to build.
-
-## Deployment Reference
-
-- `docs/mcp-middleware-platform-reference-architecture.md`
-
-## Local Demo
-
-- `demo/mcp-middleware-platform/README.md`
-- Quick run: `node demo/mcp-middleware-platform/demo-client.js`
+Run `npm run build` to build.

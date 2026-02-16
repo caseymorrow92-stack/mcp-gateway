@@ -9,11 +9,22 @@ import type { ProxyProcessSpawnRequestV1, RawProxyInvocationV1 } from "./compone
 import { evaluateProxyProcessSpawn } from "./components/proxy-process-governor";
 import { runMcpMiddlewarePlatform } from "./index";
 
+// Global policy config for stdio proxy mode
+let globalPolicyConfig: PolicyConfig | undefined;
+
 function usage(): void {
   console.error(`Usage:
   npx tsx projects/mcp-middleware-platform/cli.ts <input.json>
-  npx tsx projects/mcp-middleware-platform/cli.ts --stdio -- "node path/to/mcp-server.js"
-  npx tsx projects/mcp-middleware-platform/cli.ts --proxy "node path/to/mcp-server.js" --stdio`);
+  npx tsx projects/mcp-middleware-platform/cli.ts --stdio --policy-file <policy.json> -- "node path/to/mcp-server.js"
+  npx tsx projects/mcp-middleware-platform/cli.ts --proxy "node path/to/mcp-server.js" --stdio
+  npx tsx projects/mcp-middleware-platform/cli.ts --policy-file <policy.json> --stdio -- "node path/to/mcp-server.js"
+
+Options:
+  --policy-file, -p <file>   Policy configuration JSON file
+  --stdio                     Run in stdio proxy mode
+  --proxy <cmd>              MCP server command to spawn
+  --help, -h                Show this help
+`);
 }
 
 function countCategories(report: ReturnType<typeof runMcpMiddlewarePlatform>): {
@@ -40,6 +51,7 @@ type CliArgs = {
   inputPath?: string;
   proxyCommand?: string;
   stdioMode: boolean;
+  policyFile?: string;
 };
 
 type JsonRecord = Record<string, unknown>;
@@ -66,6 +78,15 @@ function parseArgs(argv: string[]): CliArgs {
 
     if (token === "--stdio") {
       parsed.stdioMode = true;
+      continue;
+    }
+
+    if (token === "--policy-file" || token === "-p") {
+      const next = argv[i + 1];
+      if (typeof next === "string" && next.length > 0 && next !== "--") {
+        parsed.policyFile = next;
+        i += 1;
+      }
       continue;
     }
 
@@ -141,7 +162,17 @@ function toToolName(message: JsonRecord): string {
   return method;
 }
 
-function createProxyInvocation(message: JsonRecord, direction: "inbound" | "outbound"): RawProxyInvocationV1 {
+type PolicyConfig = {
+  policyRules?: unknown[];
+  rateLimitRules?: unknown[];
+  redactionRules?: unknown[];
+};
+
+function createProxyInvocation(
+  message: JsonRecord, 
+  direction: "inbound" | "outbound",
+  policyConfig?: PolicyConfig
+): RawProxyInvocationV1 {
   const requestId = asStringId(message.id);
   const method = getMethod(message);
   const argumentsPayload = toArguments(message);
@@ -173,10 +204,10 @@ function createProxyInvocation(message: JsonRecord, direction: "inbound" | "outb
       scopes: ["proxy:stdio"],
       sourceIp: "127.0.0.1"
     },
-    policyRules: [],
-    rateLimitRules: [],
+    policyRules: policyConfig?.policyRules || [],
+    rateLimitRules: policyConfig?.rateLimitRules || [],
     toolCatalog: [],
-    redactionRules: [],
+    redactionRules: policyConfig?.redactionRules || [],
     pricing: {
       inputTokenPriceUsd: 0,
       outputTokenPriceUsd: 0,
@@ -196,7 +227,7 @@ function processMessageForMiddleware(messageBuffer: Buffer, direction: "inbound"
     const message = JSON.parse(messageBuffer.toString("utf8")) as JsonRecord;
     if (isRecord(message)) {
       debugLog(`middleware ${direction} method=${getMethod(message)} id=${asStringId(message.id) || "notification"}`);
-      runMcpMiddlewarePlatform(createProxyInvocation(message, direction));
+      runMcpMiddlewarePlatform(createProxyInvocation(message, direction, globalPolicyConfig));
     }
   } catch {
     // Best-effort parsing only. Forwarding continues unchanged.
@@ -275,7 +306,7 @@ function createFramedMessageInterceptor(options: {
   };
 }
 
-function runStdioProxy(proxyCommand: string): number {
+function runStdioProxy(proxyCommand: string, policyConfig?: Record<string, unknown>): number {
   const spawnRequest = buildProxyProcessSpawnRequest(proxyCommand);
   const spawnDecision = evaluateProxyProcessSpawn(spawnRequest);
   debugLog(`proxy decision status=${spawnDecision.status} reason=${spawnDecision.reasonCode} command="${spawnDecision.normalizedCommand}"`);
@@ -284,6 +315,14 @@ function runStdioProxy(proxyCommand: string): number {
     console.error(`Failed: proxy spawn denied (${spawnDecision.reasonCode})`);
     return 1;
   }
+
+  // Extract policy rules from config
+  const policyRules = Array.isArray(policyConfig?.policyRules) ? policyConfig.policyRules : [];
+  const rateLimitRules = Array.isArray(policyConfig?.rateLimitRules) ? policyConfig.rateLimitRules : [];
+  const redactionRules = Array.isArray(policyConfig?.redactionRules) ? policyConfig.redactionRules : [];
+  
+  // Set global policy config for use in message processing
+  globalPolicyConfig = { policyRules, rateLimitRules, redactionRules };
 
   let activeChild: ReturnType<typeof spawn> | null = null;
   let activeInboundBridge: { dispose: () => void } | null = null;
@@ -473,7 +512,22 @@ function main(): number | null {
       usage();
       return 1;
     }
-    const startupCode = runStdioProxy(args.proxyCommand);
+    
+    // Load policy file if provided
+    let policyConfig: Record<string, unknown> | undefined;
+    if (args.policyFile) {
+      try {
+        const policyContent = readFileSync(resolve(args.policyFile), "utf8");
+        policyConfig = JSON.parse(policyContent);
+        console.error(`Loaded policy from: ${args.policyFile}`);
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.error(`Failed to load policy file: ${errMsg}`);
+        return 1;
+      }
+    }
+    
+    const startupCode = runStdioProxy(args.proxyCommand, policyConfig);
     return startupCode === 0 ? null : startupCode;
   }
 

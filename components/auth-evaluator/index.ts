@@ -1,12 +1,5 @@
 import type { AuthEvaluationV1, NormalizedProxyContextV1 } from "../artifacts";
-
-declare const require: (id: string) => {
-  createHash: (algorithm: string) => {
-    update: (value: string) => { digest: (encoding: "hex") => string };
-  };
-};
-
-const { createHash } = require("node:crypto");
+import { createHash } from "node:crypto";
 
 const STAGE = "authenticate";
 

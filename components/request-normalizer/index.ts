@@ -1,12 +1,7 @@
 import type { NormalizedProxyContextV1, RawProxyInvocationV1 } from "../artifacts";
+import { createHash } from "node:crypto";
 
 const EMPTY_OBJECT: Record<string, unknown> = {};
-declare const require: (id: string) => unknown;
-const { createHash } = require("node:crypto") as {
-  createHash: (algorithm: "sha256") => {
-    update: (value: string) => { digest: (encoding: "hex") => string };
-  };
-};
 
 const compareAsc = (left: string, right: string): number => {
   if (left < right) {
