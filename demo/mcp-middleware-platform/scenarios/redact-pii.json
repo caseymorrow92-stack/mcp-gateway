@@ -1,0 +1,52 @@
+{
+  "name": "redact-pii",
+  "description": "Redact PII (email, SSN, phone) from requests and responses",
+  "policyRules": [
+    {
+      "policyId": "allow-all",
+      "effect": "allow"
+    }
+  ],
+  "rateLimitRules": [],
+  "redactionRules": [
+    {
+      "ruleId": "redact-email",
+      "pattern": "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}",
+      "replacement": "[EMAIL_REDACTED]",
+      "target": "all"
+    },
+    {
+      "ruleId": "redact-ssn",
+      "pattern": "\\d{3}-\\d{2}-\\d{4}",
+      "replacement": "[SSN_REDACTED]",
+      "target": "all"
+    },
+    {
+      "ruleId": "redact-phone",
+      "pattern": "\\d{3}[-.]?\\d{3}[-.]?\\d{4}",
+      "replacement": "[PHONE_REDACTED]",
+      "target": "all"
+    },
+    {
+      "ruleId": "redact-credit-card",
+      "pattern": "\\d{4}[-.\\s]?\\d{4}[-.\\s]?\\d{4}[-.\\s]?\\d{4}",
+      "replacement": "[CC_REDACTED]",
+      "target": "all"
+    }
+  ],
+  "expected": "redacted",
+  "testInput": {
+    "toolName": "customer.lookup",
+    "arguments": {
+      "customerId": "cust-123",
+      "email": "john.doe@example.com",
+      "ssn": "123-45-6789",
+      "phone": "555-123-4567"
+    }
+  },
+  "expectedOutput": {
+    "email": "[EMAIL_REDACTED]",
+    "ssn": "[SSN_REDACTED]",
+    "phone": "[PHONE_REDACTED]"
+  }
+}

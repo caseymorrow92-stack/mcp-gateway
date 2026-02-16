@@ -1,0 +1,24 @@
+{
+  "name": "rate-limit-by-user",
+  "description": "Rate limit: 10 requests per minute per user",
+  "policyRules": [
+    {
+      "policyId": "allow-all",
+      "effect": "allow"
+    }
+  ],
+  "rateLimitRules": [
+    {
+      "ruleId": "user-rate-limit",
+      "scope": "userId",
+      "maxRequests": 10,
+      "windowMs": 60000
+    }
+  ],
+  "redactionRules": [],
+  "expected": "rate-limited",
+  "testCall": {
+    "simulateCalls": 11,
+    "shouldBe": "denied at call #11"
+  }
+}

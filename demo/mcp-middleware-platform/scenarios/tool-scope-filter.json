@@ -1,0 +1,37 @@
+{
+  "name": "tool-scope-filter",
+  "description": "Tool visibility based on user scopes - read-only users can't call write tools",
+  "policyRules": [
+    {
+      "policyId": "allow-read",
+      "effect": "allow",
+      "target": {
+        "toolNames": ["*.read", "*.list", "*.get", "*.search"]
+      }
+    },
+    {
+      "policyId": "deny-write",
+      "effect": "deny",
+      "target": {
+        "toolNames": ["*.create", "*.update", "*.delete", "*.write"]
+      }
+    }
+  ],
+  "rateLimitRules": [],
+  "redactionRules": [],
+  "expected": "filtered",
+  "testUsers": [
+    {
+      "userId": "reader-user",
+      "scopes": ["tools:read"],
+      "canCall": ["customer.lookup", "customer.list"],
+      "cannotCall": ["customer.create", "customer.delete"]
+    },
+    {
+      "userId": "admin-user",
+      "scopes": ["tools:*"],
+      "canCall": ["customer.lookup", "customer.create", "customer.delete"],
+      "cannotCall": []
+    }
+  ]
+}

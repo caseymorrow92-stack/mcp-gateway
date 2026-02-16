@@ -1,0 +1,13 @@
+{
+  "name": "allow-all",
+  "description": "Permissive policy - allows all tool calls",
+  "policyRules": [
+    {
+      "policyId": "allow-all",
+      "effect": "allow"
+    }
+  ],
+  "rateLimitRules": [],
+  "redactionRules": [],
+  "expected": "pass"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "deny特定-tools",
+  "description": "Deny specific tools - blocks file.delete and customer.export",
+  "policyRules": [
+    {
+      "policyId": "deny-file-operations",
+      "effect": "deny",
+      "target": {
+        "toolNames": ["file.delete", "file.write"]
+      },
+      "condition": {
+        "always": true
+      }
+    },
+    {
+      "policyId": "deny-customer-export",
+      "effect": "deny",
+      "target": {
+        "toolNames": ["customer.export", "customer.delete"]
+      },
+      "condition": {
+        "always": true
+      }
+    },
+    {
+      "policyId": "allow-other",
+      "effect": "allow"
+    }
+  ],
+  "rateLimitRules": [],
+  "redactionRules": [],
+  "expected": "blocked",
+  "testCall": {
+    "toolName": "file.delete",
+    "shouldBe": "denied"
+  }
+}
