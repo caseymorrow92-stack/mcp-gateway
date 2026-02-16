@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { spawn } = require("node:child_process");
-const { existsSync } = require("node:fs");
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 
 function parseArgs(argv) {
   const result = {
@@ -37,7 +37,7 @@ function parseArgs(argv) {
 
 function buildDefaultProxyCommand(scenarioName) {
   const localTsx = "./node_modules/.bin/tsx";
-  const tsxCommand = existsSync(localTsx) ? localTsx : "npx tsx";
+  const tsxCommand = existsSync(localTsx) ? localTsx : "npx --yes tsx";
   const policyFlag = scenarioName
     ? ` --policy-file \"demo/mcp-middleware-platform/scenarios/${scenarioName}.json\"`
     : "";
@@ -180,6 +180,7 @@ async function main() {
   });
 
   child.stdout.on("data", parse);
+  const responseTimeoutMs = 120000;
 
   try {
     section("1) Initialize Session");
@@ -196,7 +197,7 @@ async function main() {
     logRequest("initialize", initializeRequest);
     send(child, initializeRequest);
 
-    const initResponse = await waitForResponse(waiters, 1, 20000, () => proxyExitMessage);
+    const initResponse = await waitForResponse(waiters, 1, responseTimeoutMs, () => proxyExitMessage);
     logResponse("initialize", initResponse);
 
     section("2) Confirm Client Ready");
@@ -217,7 +218,7 @@ async function main() {
     logRequest("tools/list", listToolsRequest);
     send(child, listToolsRequest);
 
-    const listResponse = await waitForResponse(waiters, 2, 20000, () => proxyExitMessage);
+    const listResponse = await waitForResponse(waiters, 2, responseTimeoutMs, () => proxyExitMessage);
     logResponse("tools/list", listResponse);
 
     section("4) Call Tool");
@@ -235,7 +236,7 @@ async function main() {
     logRequest("tools/call", callToolRequest);
     send(child, callToolRequest);
 
-    const callResponse = await waitForResponse(waiters, 3, 20000, () => proxyExitMessage);
+    const callResponse = await waitForResponse(waiters, 3, responseTimeoutMs, () => proxyExitMessage);
     logResponse("tools/call", callResponse);
 
     const tools = listResponse && listResponse.result && Array.isArray(listResponse.result.tools)
