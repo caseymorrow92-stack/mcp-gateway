@@ -113,7 +113,7 @@ Try different policy scenarios:
 │              │     │                  │     │              │
 │ - Claude     │     │ auth            │     │ - fileserver │
 │ - OpenAI     │     │ policy          │     │ - database   │
-│ - LangChain  │     │ rate-limit     │     │ - search     │
+│ - LangChain  │     │ rate-limit      │     │ - search     │
 │              │     │ redact          │     │              │
 │              │     │ trace           │     │              │
 └──────────────┘     └──────────────────┘     └──────────────┘
