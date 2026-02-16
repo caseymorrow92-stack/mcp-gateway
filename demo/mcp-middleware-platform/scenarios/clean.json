@@ -1,0 +1,51 @@
+{
+  "invocationIdHint": "inv-demo-clean",
+  "envelope": {
+    "protocolVersion": "2025-01-01",
+    "requestId": "req-demo-clean",
+    "method": "tools/call",
+    "transport": "http",
+    "receivedAtEpochMs": 1730000000123,
+    "toolCall": {
+      "serverId": "crm-server",
+      "toolName": "customer.lookup",
+      "arguments": {
+        "serverId": "crm-server",
+        "customerId": "cust-1"
+      }
+    }
+  },
+  "context": {
+    "tenantId": "tenant-acme",
+    "environment": "prod",
+    "sessionId": "session-demo-clean",
+    "userId": "user-demo",
+    "agentId": "agent-demo",
+    "orgRoles": ["platform"],
+    "scopes": ["tools:read"],
+    "sourceIp": "203.0.113.10"
+  },
+  "policyRules": [],
+  "rateLimitRules": [],
+  "toolCatalog": [
+    {
+      "serverId": "crm-server",
+      "toolName": "customer.lookup",
+      "description": "Look up a customer profile by id",
+      "visibility": "public",
+      "scopeRequirements": ["tools:read"]
+    }
+  ],
+  "redactionRules": [],
+  "pricing": {
+    "inputTokenPriceUsd": 0.0001,
+    "outputTokenPriceUsd": 0.0002,
+    "requestBaseFeeUsd": 0.01
+  },
+  "usageSnapshot": {
+    "tokenEstimateInput": 120,
+    "tokenEstimateOutput": 80,
+    "historicalCallsInWindow": {},
+    "windowStartEpochMs": 1730000000000
+  }
+}

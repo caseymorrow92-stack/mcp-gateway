@@ -14,10 +14,10 @@ let globalPolicyConfig: PolicyConfig | undefined;
 
 function usage(): void {
   console.error(`Usage:
-  npx tsx projects/mcp-middleware-platform/cli.ts <input.json>
-  npx tsx projects/mcp-middleware-platform/cli.ts --stdio --policy-file <policy.json> -- "node path/to/mcp-server.js"
-  npx tsx projects/mcp-middleware-platform/cli.ts --proxy "node path/to/mcp-server.js" --stdio
-  npx tsx projects/mcp-middleware-platform/cli.ts --policy-file <policy.json> --stdio -- "node path/to/mcp-server.js"
+  npx tsx ./cli.ts <input.json>
+  npx tsx ./cli.ts --stdio --policy-file <policy.json> -- "node path/to/mcp-server.js"
+  npx tsx ./cli.ts --proxy "node path/to/mcp-server.js" --stdio
+  npx tsx ./cli.ts --policy-file <policy.json> --stdio -- "node path/to/mcp-server.js"
 
 Options:
   --policy-file, -p <file>   Policy configuration JSON file
